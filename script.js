@@ -13,9 +13,14 @@ var svg = graph.append('svg')
 
 graph.attr('background-color', 'blue')
 
-var tooltip = graph.append('div')
-                    .attr('id', 'tooltip')
-                //     .style('opacity', 1)
+var tooltip = d3.select('#graph')
+        .append('div')
+        .attr('id', 'tooltip')
+        .style('opacity', '0')
+        .style('left', '0')
+        .style('top', '0')
+
+
 
 function printData(data) {
         
@@ -28,19 +33,74 @@ function printData(data) {
         const maxValue = Math.max(...data.data.map(d => d[1]))
         
         // we then make a scale to set the maximum height of the chart
-        const yScale = maxValue/height;
+        const graphScale = maxValue/height;
+
 
         console.log(maxValue)
+
+        // This is where we addd the bars to the chart
+        // we need a data-attribute for the value so we
+        // can pull it up on :hover
         svg.selectAll('rect')
                 .data(data.data)
                 .enter()
                 .append('rect')
                 .attr('x', (d,i) => i * barWidth + margin)
-                .attr('y', d => height - d[1]/yScale + margin)
+                .attr('y', d => height - d[1]/graphScale + margin)
                 .attr('width',barWidth-1)
-                .attr('height', d => d[1]/yScale)
+                .attr('height', d => d[1]/graphScale)
                 .attr('fill', '#339')
+                .attr('data-date', (d) => d[0] )
+                .attr('data-value', (d) => d[1] )
+                .on('mouseenter', (e) => {
+                        d3.select(e.target).attr("fill",'red')
+
+                        // e.srcElement.attr('fill','red')
+
+                        tooltip.transition()
+                                .duration(20)
+                                .style('opacity',1)
+                                .style('left', `${e.x + 10}px` )
+                                .style('top', `${e.y + 20}px` )
+                                .text(`[ ${e.srcElement.dataset.date}, ${e.srcElement.dataset.value} ]`)
+                })
+                .on('mouseout', (e) => {
+                        console.log(e)
+                        d3.select(e.target).attr("fill",'#339')
+
+                        tooltip.transition()
+                                .duration(20)
+                                .style('opacity',0)
+                                
+                })
                 
+
+        
+        
+        var xScale = d3.scaleTime()
+                        .domain(0,data.data.map( (d)=> new Date(d[0])))
+                        .range([10,width+10])
+
+        var xAxis = d3.axisBottom()
+                        .scale(xScale)
+
+        svg.append('g')
+                .call(xAxis)
+                .attr('id', 'x-axis')
+                .attr('transform', 'translate(40, 560)')
+
+        var yScale = d3.scaleLinear()
+                                .domain(0, data.data.map( (d) => d[1] ))
+                                .range([height + margin, margin-10])
+                                
+        const yAxis = d3.axisLeft()
+                        .scale(yScale)
+
+        svg.append('g')
+                .call(yAxis)
+                .attr('id','y-axis')
+                .attr('transform', 'translate(40, 0)')
+
        console.log(data.data)
 }
 
