@@ -1,5 +1,6 @@
-const d3 = window.d3
+// import d3 from  'd3.v7.min.js'
 
+const d3 = window.d3
 const height = 500;
 const width = 1000;
 
@@ -38,6 +39,36 @@ function printData(data) {
 
         console.log(maxValue)
 
+
+        var xScale = d3.scaleTime()
+        .domain( [ 
+                new Date(data.data.reduce( (min,d)=> min = min > d ? d : min, data.data[0] )[0]),
+                new Date(data.data.reduce( (max, d)=> max = max < d ? d : max ,data.data[0] )[0] ) 
+        ] )
+        .range([10,width+10])
+
+        var xAxis = d3.axisBottom()
+                .scale(xScale)
+
+        svg.append('g')
+        .call(xAxis)
+        .attr('id', 'x-axis')
+        .attr('transform', 'translate(40, 560)')
+
+        var yScale = d3.scaleLinear()
+                .domain([0, data.data.reduce( (max,d)=> max = (max <= d[1]) ? d[1] : max ,0) ])
+                .range([height + margin, margin-10])
+
+        const yAxis = d3.axisLeft(yScale)
+                // .orient('left')
+        console.log( {...yAxis} )
+
+        svg.append('g')
+        .attr('id','y-axis')
+        .call(yAxis)
+        .attr('transform', 'translate(40, 0)')
+
+
         // This is where we addd the bars to the chart
         // we need a data-attribute for the value so we
         // can pull it up on :hover
@@ -45,13 +76,14 @@ function printData(data) {
                 .data(data.data)
                 .enter()
                 .append('rect')
-                .attr('x', (d,i) => i * barWidth + margin)
-                .attr('y', d => height - d[1]/graphScale + margin)
-                .attr('width',barWidth-1)
-                .attr('height', d => d[1]/graphScale)
+                .attr('x', (d) => xScale(new Date(d[0])) - margin)
+                .attr('y', d => margin + yScale( d[1] ) )
+                .attr('width', 1 )
+                .attr('height', d => height - yScale( d[1] ))
                 .attr('fill', '#339')
                 .attr('data-date', (d) => d[0] )
-                .attr('data-value', (d) => d[1] )
+                .attr('data-gdp', (d) => d[1] )
+                .attr('class','bar')
                 .on('mouseenter', (e) => {
                         d3.select(e.target).attr("fill",'red')
 
@@ -62,10 +94,10 @@ function printData(data) {
                                 .style('opacity',1)
                                 .style('left', `${e.x + 10}px` )
                                 .style('top', `${e.y + 20}px` )
-                                .text(`[ ${e.srcElement.dataset.date}, ${e.srcElement.dataset.value} ]`)
+                                .text(`[ ${e.srcElement.dataset.date}, ${e.srcElement.dataset.gdp} ]`)
                 })
                 .on('mouseout', (e) => {
-                        console.log(e)
+                        // console.log(e)
                         d3.select(e.target).attr("fill",'#339')
 
                         tooltip.transition()
@@ -75,31 +107,13 @@ function printData(data) {
                 })
                 
 
+        data.data.map( (d,i) => {
+                console.log(d)
+        })
         
+
+
         
-        var xScale = d3.scaleTime()
-                        .domain(0,data.data.map( (d)=> new Date(d[0])))
-                        .range([10,width+10])
-
-        var xAxis = d3.axisBottom()
-                        .scale(xScale)
-
-        svg.append('g')
-                .call(xAxis)
-                .attr('id', 'x-axis')
-                .attr('transform', 'translate(40, 560)')
-
-        var yScale = d3.scaleLinear()
-                                .domain(0, data.data.map( (d) => d[1] ))
-                                .range([height + margin, margin-10])
-                                
-        const yAxis = d3.axisLeft()
-                        .scale(yScale)
-
-        svg.append('g')
-                .call(yAxis)
-                .attr('id','y-axis')
-                .attr('transform', 'translate(40, 0)')
 
        console.log(data.data)
 }
