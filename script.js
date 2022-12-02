@@ -21,9 +21,14 @@ var tooltip = d3.select('#graph')
         .style('left', '0')
         .style('top', '0')
 
+function earliest( date1, date2 ) {
+        if( new Date( date1 ) < new Date( date2 ) ){
+                return true;
+        }
+        return false;
+}
 
-
-function printData(data) {
+function printData( data ) {
         
         const barWidth = (width / data.data.length)
         const margin = 50
@@ -31,22 +36,32 @@ function printData(data) {
         // we find the maximum of the values in data.data which is the array of values we are lookin at
         // we are looking specifically for the maximum of the values in index 1 of the data.data arrays
         // they are layed out  [date , value]
-        const maxValue = Math.max(...data.data.map(d => d[1]))
+        const maxValue = Math.max(...data.data.map( d => d[1] ) )
         
         // we then make a scale to set the maximum height of the chart
         const graphScale = maxValue/height;
 
 
-        console.log(maxValue)
+        console.log( maxValue )
 
 
         var xScale = d3.scaleTime()
-        .domain( [ 
-                new Date(data.data.reduce( (min,d)=> min = min > d ? d : min, data.data[0] )[0]),
-                new Date(data.data.reduce( (max, d)=> max = max < d ? d : max ,data.data[0] )[0] ) 
+        .domain( [
+                new Date( data.data.reduce( (min, d)=> min = earliest( min, d[0] ) ? min : d[0], data.data[0][0]  ) ) ,
+                new Date( data.data.reduce( (max, d)=> max = earliest( d[0], max ) ? max : d[0], data.data[0][0] ) )  
         ] )
-        .range([10,width+10])
+        .range([0 , width ])
 
+
+        // console.log( new Date( data.data.reduce( (min,d)=> min = earliest( min, d[0] ) ? min : d[0], data.data[0][0]  ) ) )
+
+        // console.log(new Date( data.data.reduce( (max, d)=> max = earliest( d[0], max ) ? max : d[0] ,data.data[0][0] ) ) )
+
+        // console.log( new Date( data.data[0][0]  ) )
+
+        // console.log( new Date( data.data[0][0] ) < new Date( data.data[0][1] ) )
+        // console.log( earliest( data.data[0][0], data.data[0][1] ) )
+// 
         var xAxis = d3.axisBottom()
                 .scale(xScale)
 
@@ -57,11 +72,12 @@ function printData(data) {
 
         var yScale = d3.scaleLinear()
                 .domain([0, data.data.reduce( (max,d)=> max = (max <= d[1]) ? d[1] : max ,0) ])
-                .range([height + margin, margin-10])
+                .range([margin, height + margin])
 
         const yAxis = d3.axisLeft(yScale)
                 // .orient('left')
-        console.log( {...yAxis} )
+        
+        data.data.map(d => console.log( yScale(d[1]) ))
 
         svg.append('g')
         .attr('id','y-axis')
@@ -76,10 +92,10 @@ function printData(data) {
                 .data(data.data)
                 .enter()
                 .append('rect')
-                .attr('x', (d) => xScale(new Date(d[0])) - margin)
-                .attr('y', d => margin + yScale( d[1] ) )
+                .attr('x', d => xScale(new Date( d[0] ) ) + margin )
+                .attr('y', d=> (height + margin) - (yScale( d[1] ) - margin) )
                 .attr('width', 1 )
-                .attr('height', d => height - yScale( d[1] ))
+                .attr('height', d => yScale( d[1] ) -margin )
                 .attr('fill', '#339')
                 .attr('data-date', (d) => d[0] )
                 .attr('data-gdp', (d) => d[1] )
@@ -107,10 +123,10 @@ function printData(data) {
                 })
                 
 
-        data.data.map( (d,i) => {
-                console.log(d)
-        })
-        
+        // data.data.map( (d) => {
+        //         console.log(d[0])
+        // })
+        // console.log( data.data[0][0] )        
 
 
         
