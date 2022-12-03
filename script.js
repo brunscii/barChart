@@ -1,49 +1,36 @@
 // import d3 from  'd3.v7.min.js'
 
 const d3 = window.d3
-const height = 500;
-const width = 1000;
 
 
-var graph = d3.select('#graph')
 
-var svg = graph.append('svg')
+function printData( data ) {
+        
+        const margin = 50
+        const height = 500;
+        const width = 1000;
+
+        var graph = d3.select('#graph')
+        .attr('background-color', 'blue')
+
+        var svg = graph.append('svg')
                 .attr('width', width+100)
                 .attr('height', height+100)
                 .style('background-color', '#777')
 
-graph.attr('background-color', 'blue')
+        var tooltip = d3.select('#graph')
+                .append('div')
+                .attr('id', 'tooltip')
+                .style('opacity', '0')
+                .style('left', '0')
+                .style('top', '0')
 
-var tooltip = d3.select('#graph')
-        .append('div')
-        .attr('id', 'tooltip')
-        .style('opacity', '0')
-        .style('left', '0')
-        .style('top', '0')
-
-function earliest( date1, date2 ) {
-        if( new Date( date1 ) < new Date( date2 ) ){
-                return true;
+        function earliest( date1, date2 ) {
+                if( new Date( date1 ) < new Date( date2 ) ){
+                        return true;
+                }
+                return false;
         }
-        return false;
-}
-
-function printData( data ) {
-        
-        const barWidth = (width / data.data.length)
-        const margin = 50
-
-        // we find the maximum of the values in data.data which is the array of values we are lookin at
-        // we are looking specifically for the maximum of the values in index 1 of the data.data arrays
-        // they are layed out  [date , value]
-        const maxValue = Math.max(...data.data.map( d => d[1] ) )
-        
-        // we then make a scale to set the maximum height of the chart
-        const graphScale = maxValue/height;
-
-
-        console.log( maxValue )
-
 
         var xScale = d3.scaleTime()
         .domain( [
@@ -66,9 +53,9 @@ function printData( data ) {
                 .scale(xScale)
 
         svg.append('g')
-        .call(xAxis)
-        .attr('id', 'x-axis')
-        .attr('transform', 'translate(40, 560)')
+                .call(xAxis)
+                .attr('id', 'x-axis')
+                .attr('transform', 'translate(40, 560)')
 
         var yScale = d3.scaleLinear()
                 .domain([0, data.data.reduce( (max,d)=> max = (max <= d[1]) ? d[1] : max ,0) ])
